@@ -1,4 +1,7 @@
 import unittest
+import warnings
+
+import numpy
 
 from cupy import testing
 
@@ -19,7 +22,16 @@ class TestArithmetic(unittest.TestCase):
     def check_binary(self, name, xp, dtype):
         a = testing.shaped_arange((2, 3), xp, dtype)
         b = testing.shaped_reverse_arange((2, 3), xp, dtype)
-        return getattr(xp, name)(a, b)
+        if name == 'subtract' and dtype is numpy.bool_:
+            with warnings.catch_warnings(record=True) as ws:
+                warnings.filterwarnings('always', category=DeprecationWarning)
+                res = getattr(xp, name)(a, b)
+                # Cupy also need to warn in this situation
+                # self.assertEqual(len(ws), 1)
+                # self.assertIs(ws[0].category, DeprecationWarning)
+                return res
+        else:
+            return getattr(xp, name)(a, b)
 
     @testing.for_dtypes(['?', 'b', 'h', 'i', 'q', 'e', 'f', 'd'])
     @testing.numpy_cupy_allclose(atol=1e-5)

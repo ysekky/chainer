@@ -1,5 +1,6 @@
 import operator
 import unittest
+import warnings
 
 import numpy
 
@@ -49,7 +50,16 @@ class TestArrayUnaryOp(unittest.TestCase):
     @testing.numpy_cupy_allclose()
     def check_array_op(self, op, xp, dtype):
         a = testing.shaped_arange((2, 3), xp, dtype)
-        return op(a)
+        if op is operator.neg and dtype is numpy.bool_:
+            with warnings.catch_warnings(record=True) as ws:
+                warnings.filterwarnings('always', category=DeprecationWarning)
+                res = op(a)
+                # Cupy also need to warn in this situation
+                # self.assertEqual(len(ws), 1)
+                # self.assertIs(ws[0].category, DeprecationWarning)
+                return res
+        else:
+            return op(a)
 
     def test_neg_array(self):
         self.check_array_op(operator.neg)
