@@ -33,13 +33,13 @@ class StatelessSLSTM(link.Chain):
             c = self.xp.zeros((len(h.data), self.state_size), dtype=h.dtype)
         return c, lstm_in
 
-    def __call__(self, c1, h1, c2, h2):
+    def __call__(self, c1, c2, h1, h2):
         """Returns S-LSTM output.
 
         Args:
             c1 (~chainer.Variable): Left cell state of S-LSTM units.
-            h1 (~chainer.Variable): Left hidden state.
             c2 (~chainer.Variable): Right cell state.
+            h1 (~chainer.Variable): Left hidden state.
             h2 (~chainer.Variable): Right hidden state.
 
         Returns:
