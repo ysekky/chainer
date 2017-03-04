@@ -74,22 +74,40 @@ class Softmax(function.Function):
 
 
 def softmax(x, use_cudnn=True):
-    """Channelwise softmax function.
+    """Channel-wise softmax function.
 
     This function computes its softmax along the second axis. Let
-    :math:`x = (x_1, x_2, \\dots, x_d)^{\\top}` be the d dimensional index
-    array and :math:`f(x)` be the d dimensional input array. For each index
-    :math:`x` of the input array :math:`f(x)`, it computes the probability
-    :math:`p(x)` defined as
-    :math:`p(x) = {\\exp(f(x)) \\over \\sum_{x_2} \\exp(f(x))}`.
+    :math:`x = (x_1, x_2, \\dots, x_D)^{\\top}` be the D dimensional index
+    array and :math:`f(x)` be the D dimensional input array. For each index
+    :math:`x_d` of the input array :math:`f(x_d)`, it computes the probability
+    :math:`p(x_d)` defined as
+    :math:`p(x_d) = {\\exp(f(x_d)) \\over \\sum_{x_i} \\exp(f(x_i))}`.
 
     Args:
         x (~chainer.Variable): Input variable.
         use_cudnn (bool): If ``True`` and cuDNN is enabled, then this function
             uses cuDNN as the core implementation.
 
+    Args:
+        X (:class:`~chainer.Variable` or :class:`numpy.ndarray` or \
+        :class:`cupy.ndarray`):
+            Input variable. 
+            A 2d (N, D) :math:`((s_1^1, ..., s_D^1), ..., (s_1^N, ..., s_D^N))`-shaped float array.
+        use_cudnn (bool): If ``True`` and cuDNN is enabled, then this function
+            uses cuDNN as the core implementation.
+
     Returns:
-        ~chainer.Variable: Output variable.
+        ~chainer.Variable: Output variable. A 2d (N, D) 
+        :math:`((s_1^1, ..., s_D^1), ..., (s_1^N, ..., s_D^N)`-shaped float array.
+
+     .. admonition:: Example
+         >>> x = np.array([[0, 1, 2, 3], [0, 2, 4, 6]]).astype('f')
+         >>> x
+         array([[ 0.,  1.,  2.,  3.],
+                    [ 0.,  2.,  4.,  6.]], dtype=float32)
+         >>> F.softmax(x).data
+         array([[ 0.0320586 ,  0.08714432,  0.23688284,  0.64391428],
+                    [ 0.00214401,  0.0158422 ,  0.11705891,  0.86495483]], dtype=float32)
 
     """
     return Softmax(use_cudnn)(x)
