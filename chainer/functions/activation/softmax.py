@@ -99,14 +99,13 @@ def softmax(x, use_cudnn=True):
 
     .. admonition:: Example
 
-         >>> x = np.array([[0, 1, 2, 3], [0, 2, 4, 6]]).astype('f')
-         >>> x
-         array([[ 0.,  1.,  2.,  3.],
-                [ 0.,  2.,  4.,  6.]], dtype=float32)
-         >>> F.softmax(x).data
-         array([[ 0.0320586 ,  0.08714432,  0.23688284,  0.64391428],
-                [ 0.00214401,  0.0158422 ,  0.11705891,  0.86495483]], \
-         dtype=float32)
+        >>> x = np.array([[0, 1, 2], [0, 2, 4]], 'f')
+        >>> x
+        array([[ 0.,  1.,  2.],
+               [ 0.,  2.,  4.]], dtype=float32)
+        >>> F.softmax(x).data
+        array([[ 0.09003057,  0.24472848,  0.66524094],
+               [ 0.01587624,  0.11731043,  0.86681336]], dtype=float32)
 
     """
     return Softmax(use_cudnn)(x)
