@@ -87,15 +87,14 @@ def softmax(x, use_cudnn=True):
         X (:class:`~chainer.Variable` or :class:`numpy.ndarray` or \
         :class:`cupy.ndarray`):
             Input variable.
-            A 2d (N, D) :math:`((s_1^1, ..., s_D^1), ..., (s_1^N, ..., s_D^N))`
-            -shaped float array.
+            A :math:`n`-dimensional (:math:`n \\geq 2`) float array.
         use_cudnn (bool): If ``True`` and cuDNN is enabled, then this function
             uses cuDNN as the core implementation.
 
     Returns:
-        ~chainer.Variable: Output variable. A 2d (N, D)
-        :math:`((s_1^1, ..., s_D^1), ..., (s_1^N, ..., s_D^N))`
-        -shaped float array.
+        ~chainer.Variable: Output variable. 
+        A :math:`n`-dimensional (:math:`n \\geq 2`) float array, which is the same 
+        shape with X.
 
     .. admonition:: Example
 
@@ -103,9 +102,12 @@ def softmax(x, use_cudnn=True):
         >>> x
         array([[ 0.,  1.,  2.],
                [ 0.,  2.,  4.]], dtype=float32)
-        >>> F.softmax(x).data
+        >>> y = F.softmax(x)
+        >>> y.data
         array([[ 0.09003057,  0.24472848,  0.66524094],
                [ 0.01587624,  0.11731043,  0.86681336]], dtype=float32)
+        >>> F.sum(y, axis=1).data
+        array([ 1.,  1.], dtype=float32)
 
     """
     return Softmax(use_cudnn)(x)
