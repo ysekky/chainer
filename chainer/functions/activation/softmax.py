@@ -92,9 +92,9 @@ def softmax(x, use_cudnn=True):
             uses cuDNN as the core implementation.
 
     Returns:
-        ~chainer.Variable: Output variable. 
-        A :math:`n`-dimensional (:math:`n \\geq 2`) float array, which is the same 
-        shape with X.
+        ~chainer.Variable: Output variable.
+        A :math:`n`-dimensional (:math:`n \\geq 2`) float array, which is the
+        same shape with X.
 
     .. admonition:: Example
 
