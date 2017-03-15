@@ -3176,8 +3176,18 @@ cpdef ndarray tensordot_core(
         if out.dtype != dtype:
             out = ndarray(ret_shape, dtype)
 
+    handle = device.get_cublas_handle()
     if m == 1 and n == 1:
-        (a.ravel() * b.ravel()).sum(out=out.reshape(()))
+        if a.dtype == 'f' and b.dtype == 'f' and out.dtype == 'f':
+            cublas.setPointerMode(handle, cublas.CUBLAS_POINTER_MODE_DEVICE)
+            cublas.sdot(handle, a.size, a.data.ptr, a._strides[0] // a.itemsize,
+                        b.data.ptr, b._strides[0] // b.itemsize, out.data.ptr)
+        elif a.dtype == 'd' and b.dtype == 'd' and out.dtype == 'd':
+            cublas.setPointerMode(handle, cublas.CUBLAS_POINTER_MODE_DEVICE)
+            cublas.ddot(handle, a.size, a.data.ptr, a._strides[0] // a.itemsize,
+                        b.data.ptr, b._strides[0] // b.itemsize, out.data.ptr)
+        else:
+            (a.ravel() * b.ravel()).sum(out=out.reshape(()))
         if out is not ret:
             elementwise_copy(out, ret)
         return ret
@@ -3199,7 +3209,6 @@ cpdef ndarray tensordot_core(
         c.shape = (n, m)
 
     # Be careful that cuBLAS uses the FORTRAN-order matrix representation.
-    handle = device.get_cublas_handle()
     # Matrix-Matrix product A^T * B
     # c is C-contiguous while cuBLAS assumes F-contiguous inputs, so we
     # compute C^T = B^T * A here.
