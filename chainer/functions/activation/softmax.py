@@ -84,7 +84,7 @@ def softmax(x, use_cudnn=True):
     :math:`f(x)={\\exp(x) \\over \\sum_{x_d} \\exp(x_d)}`.
 
     Args:
-        X (:class:`~chainer.Variable` or :class:`numpy.ndarray` or \
+        x (:class:`~chainer.Variable` or :class:`numpy.ndarray` or \
         :class:`cupy.ndarray`):
             Input variable.
             A :math:`n`-dimensional (:math:`n \\geq 2`) float array.
@@ -94,7 +94,7 @@ def softmax(x, use_cudnn=True):
     Returns:
         ~chainer.Variable: Output variable.
         A :math:`n`-dimensional (:math:`n \\geq 2`) float array, which is the
-        same shape with X.
+        same shape with x.
 
     .. admonition:: Example
 
