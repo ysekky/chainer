@@ -8,6 +8,7 @@ import six
 from chainer import reporter
 import chainer.serializer as serializer_module
 from chainer.training import extension
+from chainer.training.extensions import plot_base
 import chainer.training.trigger as trigger_module
 
 try:
@@ -27,7 +28,7 @@ def _check_available():
                       '  $ pip install matplotlib\n')
 
 
-class PlotReport(extension.Extension):
+class PlotReport(plot_base.PlotBase):
 
     """Trainer extension to output plots.
 
@@ -89,20 +90,13 @@ class PlotReport(extension.Extension):
     def __init__(self, y_keys, x_key='iteration', trigger=(1, 'epoch'),
                  postprocess=None, file_name='plot.png', marker='x',
                  grid=True):
-
         _check_available()
+        super(PlotReport, self).__init__(y_keys, x_key, trigger)
 
-        self._x_key = x_key
-        if isinstance(y_keys, str):
-            y_keys = (y_keys,)
-
-        self._y_keys = y_keys
-        self._trigger = trigger_module.get_trigger(trigger)
         self._file_name = file_name
         self._marker = marker
         self._grid = grid
         self._postprocess = postprocess
-        self._init_summary()
         self._data = {k: [] for k in y_keys}
 
     @staticmethod
@@ -113,55 +107,38 @@ class PlotReport(extension.Extension):
     def __call__(self, trainer):
         if not _available:
             return
+        super(PlotReport, self).__call__(trainer)
 
+    def plot(self, trainer, summary, x, ys):
         keys = self._y_keys
-        observation = trainer.observation
-        summary = self._summary
+        data = self._data
 
-        if keys is None:
-            summary.add(observation)
-        else:
-            summary.add({k: observation[k] for k in keys if k in observation})
+        for k, y in six.iteritems(ys):
+            if y is not None:
+                data[k].append((x, y))
 
-        if self._trigger(trainer):
-            stats = self._summary.compute_mean()
-            stats_cpu = {}
-            for name, value in six.iteritems(stats):
-                stats_cpu[name] = float(value)  # copy to CPU
+        f = plot.figure()
+        a = f.add_subplot(111)
+        a.set_xlabel(self._x_key)
+        if self._grid:
+            a.grid()
 
-            updater = trainer.updater
-            stats_cpu['epoch'] = updater.epoch
-            stats_cpu['iteration'] = updater.iteration
-            x = stats_cpu[self._x_key]
-            data = self._data
+        for k in keys:
+            xy = data[k]
+            if len(xy) == 0:
+                continue
 
-            for k in keys:
-                if k in stats_cpu:
-                    data[k].append((x, stats_cpu[k]))
+            xy = numpy.array(xy)
+            a.plot(xy[:, 0], xy[:, 1], marker=self._marker, label=k)
 
-            f = plot.figure()
-            a = f.add_subplot(111)
-            a.set_xlabel(self._x_key)
-            if self._grid:
-                a.grid()
+        if a.has_data():
+            if self._postprocess is not None:
+                self._postprocess(f, a, summary)
+            l = a.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+            f.savefig(path.join(trainer.out, self._file_name),
+                      bbox_extra_artists=(l,), bbox_inches='tight')
 
-            for k in keys:
-                xy = data[k]
-                if len(xy) == 0:
-                    continue
-
-                xy = numpy.array(xy)
-                a.plot(xy[:, 0], xy[:, 1], marker=self._marker, label=k)
-
-            if a.has_data():
-                if self._postprocess is not None:
-                    self._postprocess(f, a, summary)
-                l = a.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
-                f.savefig(path.join(trainer.out, self._file_name),
-                          bbox_extra_artists=(l,), bbox_inches='tight')
-
-            plot.close()
-            self._init_summary()
+        plot.close()
 
     def serialize(self, serializer):
         if isinstance(serializer, serializer_module.Serializer):
@@ -171,6 +148,3 @@ class PlotReport(extension.Extension):
         else:
             self._data = json.loads(
                 serializer('_plot_{}'.format(self._file_name), ''))
-
-    def _init_summary(self):
-        self._summary = reporter.DictSummary()
