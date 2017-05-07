@@ -209,7 +209,6 @@ class Convolution2DFunction(function.Function):
         gy = grad_outputs[0]
         _, out_c, out_h, out_w = gy.shape
         n, c, h, w = x.shape
-        kh, kw = W.shape[2:]
 
         gW = cuda.cupy.empty_like(W)
         if (not self.cover_all and cuda.cudnn_enabled and self.use_cudnn and
